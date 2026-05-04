@@ -1,0 +1,26 @@
+{
+  "id": "req-001",
+  "imp": [
+    {
+      "id": "imp-001",
+      "banner": {
+        "format": [
+          { "w": 300, "h": 250 },
+          { "w": 728, "h": 90 }
+        ]
+      },
+      "bidfloor": 0.5,
+      "bidfloorcur": "USD"
+    }
+  ],
+  "site": {
+    "page": "https://example.com/article",
+    "domain": "example.com",
+    "publisher": { "id": "pub-123", "name": "Example Media" }
+  },
+  "device": {
+    "ua": "Mozilla/5.0",
+    "ip": "192.168.1.1",
+    "os": "Windows"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "id": "req-004",
+  "imp": [
+    {
+      "id": "imp-001",
+      "video": {
+        "minduration": 5,
+        "maxduration": 30
+      }
+    }
+  ]
+}
