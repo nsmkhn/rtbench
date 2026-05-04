@@ -31,7 +31,7 @@ type Imp struct {
 	Ext         json.RawMessage `json:"ext,omitempty"`
 }
 
-// Banner represents one ad opportunity within a bid request.
+// Banner represents a banner ad slot within an impression.
 // Spec: OpenRTB 2.6 — 3.2.6
 type Banner struct {
 	Format []Format        `json:"format,omitempty"`
@@ -42,7 +42,7 @@ type Banner struct {
 	Ext    json.RawMessage `json:"ext,omitempty"`
 }
 
-// Format defined a width/height pair for banner ads.
+// Format defines a width/height pair for banner ads.
 type Format struct {
 	W int `json:"w"`
 	H int `json:"h"`
