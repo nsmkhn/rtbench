@@ -3,7 +3,7 @@ package openrtb
 import "encoding/json"
 
 // BidRequest is the top-level object sent by an exchange to a bidder.
-// Spec: OpenRTB 2.6 — 3.2.1
+// Spec: OpenRTB 2.6 — §3.2.1
 type BidRequest struct {
 	ID     string          `json:"id"`
 	Imp    []Imp           `json:"imp"`
@@ -19,7 +19,7 @@ type BidRequest struct {
 }
 
 // Imp represents one ad opportunity within a bid request.
-// Spec: OpenRTB 2.6 — 3.2.4
+// Spec: OpenRTB 2.6 — §3.2.4
 type Imp struct {
 	ID          string          `json:"id"`
 	Banner      *Banner         `json:"banner,omitempty"`
@@ -32,7 +32,7 @@ type Imp struct {
 }
 
 // Banner represents a banner ad slot within an impression.
-// Spec: OpenRTB 2.6 — 3.2.6
+// Spec: OpenRTB 2.6 — §3.2.6
 type Banner struct {
 	Format []Format        `json:"format,omitempty"`
 	W      *int            `json:"w,omitempty"`
@@ -49,7 +49,7 @@ type Format struct {
 }
 
 // Video represents a video ad opportunity.
-// Spec: OpenRTB 2.6 — 3.2.7
+// Spec: OpenRTB 2.6 — §3.2.7
 type Video struct {
 	MIMEs          []string        `json:"mimes"`
 	MinDuration    *int            `json:"minduration,omitempty"`
@@ -71,7 +71,7 @@ type Native struct {
 }
 
 // Site describes the publisher's website.
-// Spec: OpenRTB 2.6 — 3.2.13
+// Spec: OpenRTB 2.6 — §3.2.13
 type Site struct {
 	ID        string          `json:"id,omitempty"`
 	Name      string          `json:"name,omitempty"`
@@ -82,7 +82,7 @@ type Site struct {
 }
 
 // App describes a mobile application.
-// Spec: OpenRTB 2.6 — 3.2.14
+// Spec: OpenRTB 2.6 — §3.2.14
 type App struct {
 	ID        string          `json:"id,omitempty"`
 	Name      string          `json:"name,omitempty"`
@@ -93,7 +93,7 @@ type App struct {
 }
 
 // Publisher identifies the seller of the inventory.
-// Spec: OpenRTB 2.6 — 3.2.15
+// Spec: OpenRTB 2.6 — §3.2.15
 type Publisher struct {
 	ID     string          `json:"id,omitempty"`
 	Name   string          `json:"name,omitempty"`
@@ -102,7 +102,7 @@ type Publisher struct {
 }
 
 // Device describes the end user's device.
-// Spec: OpenRTB 2.6 — 3.2.18
+// Spec: OpenRTB 2.6 — §3.2.18
 type Device struct {
 	UA         string          `json:"ua,omitempty"`
 	IP         string          `json:"ip,omitempty"`
@@ -116,7 +116,7 @@ type Device struct {
 }
 
 // User contains data about the human user of the device.
-// Spec: OpenRTB 2.6 — 3.2.20
+// Spec: OpenRTB 2.6 — §3.2.20
 type User struct {
 	ID       string          `json:"id,omitempty"`
 	BuyerUID string          `json:"buyeruid,omitempty"`
