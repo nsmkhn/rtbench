@@ -42,6 +42,28 @@ func TestDecodeBidRequest(t *testing.T) {
 				}
 			},
 		},
+		{
+			name:  "bcat and badv",
+			input: `{"id":"req-001","bcat":["IAB1","IAB2"],"badv":["example.com"]}`,
+			check: func(t *testing.T, br *BidRequest) {
+				if len(br.BAdv) != 1 {
+					t.Fatalf("invalid len(br.BAdv): expected 1, got %v", len(br.BAdv))
+				}
+				if len(br.BCat) != 2 {
+					t.Fatalf("invalid len(br.BCat): expected 2, got %v", len(br.BCat))
+				}
+
+				if br.BCat[0] != "IAB1" {
+					t.Fatalf(`invalid br.BCat[0]: expected "IAB1", got %v`, br.BCat[0])
+				}
+				if br.BCat[1] != "IAB2" {
+					t.Fatalf(`invalid br.BCat[1]: expected "IAB2", got %v`, br.BCat[1])
+				}
+				if br.BAdv[0] != "example.com" {
+					t.Fatalf(`invalid br.BAdv[0]: expected "example.com", got %v`, br.BAdv[0])
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {
