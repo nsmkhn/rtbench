@@ -148,3 +148,7 @@ func (l *lexer) scanString() (token, error) {
 
 	return token{}, fmt.Errorf("lexer: unterminated string")
 }
+
+func (l *lexer) scanRaw() ([]byte, error) {
+	return nil, nil
+}
