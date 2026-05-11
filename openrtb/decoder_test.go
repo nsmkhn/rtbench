@@ -115,6 +115,36 @@ func TestDecodeBidRequest(t *testing.T) {
 				}
 			},
 		},
+		{
+			name:  "imp with banner and bidfloor",
+			input: `{"id":"req-001","imp":[{"id":"imp-001","banner":{"format":[{"w":300,"h":250},{"w":728,"h":90}]},"bidfloor":0.5,"bidfloorcur":"USD"}]}`,
+			check: func(t *testing.T, br *BidRequest) {
+				if len(br.Imp) != 1 {
+					t.Fatalf("expected 1 imp, got %d", len(br.Imp))
+				}
+				if br.Imp[0].ID != "imp-001" {
+					t.Fatalf(`invalid Imp[0].ID: expected "imp-001", got %v`, br.Imp[0].ID)
+				}
+				if br.Imp[0].Banner == nil {
+					t.Fatalf("expected Imp[0].Banner to be set, got nil")
+				}
+				if len(br.Imp[0].Banner.Format) != 2 {
+					t.Fatalf("expected 2 formats, got %d", len(br.Imp[0].Banner.Format))
+				}
+				if br.Imp[0].Banner.Format[0].W != 300 || br.Imp[0].Banner.Format[0].H != 250 {
+					t.Fatalf("invalid Format[0]: expected 300x250, got %dx%d", br.Imp[0].Banner.Format[0].W, br.Imp[0].Banner.Format[0].H)
+				}
+				if br.Imp[0].BidFloor == nil {
+					t.Fatalf("expected Imp[0].BidFloor to be set, got nil")
+				}
+				if *br.Imp[0].BidFloor != 0.5 {
+					t.Fatalf("invalid Imp[0].BidFloor: expected 0.5, got %v", *br.Imp[0].BidFloor)
+				}
+				if br.Imp[0].BidFloorCur != "USD" {
+					t.Fatalf(`invalid Imp[0].BidFloorCur: expected "USD", got %v`, br.Imp[0].BidFloorCur)
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {

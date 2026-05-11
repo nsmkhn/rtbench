@@ -44,6 +44,11 @@ func decodeBidRequest(l *lexer) (*BidRequest, error) {
 			if err != nil {
 				return nil, err
 			}
+		case "imp":
+			br.Imp, err = decodeImpSlice(l)
+			if err != nil {
+				return nil, err
+			}
 		case "at":
 			var val []byte
 			val, err = l.expectNumber()
@@ -534,6 +539,282 @@ func decodeUser(l *lexer) (*User, error) {
 	return &user, nil
 }
 
+func decodeFormat(l *lexer) (*Format, error) {
+	var format Format
+
+	token, err := l.next()
+	if err != nil {
+		return nil, err
+	}
+	if token.kind != tokLBrace {
+		return nil, fmt.Errorf("expected '{', got %v", token.kind)
+	}
+
+	for {
+		token, err = l.next()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind == tokRBrace {
+			break
+		}
+
+		key := token
+		if key.kind != tokString {
+			return nil, fmt.Errorf("expected 'string', got %v", token.kind)
+		}
+
+		token, err = l.next()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind != tokColon {
+			return nil, fmt.Errorf("expected ':', got %v", token.kind)
+		}
+
+		switch string(key.val) {
+		case "w":
+			var val []byte
+			val, err = l.expectNumber()
+			if err != nil {
+				return nil, err
+			}
+
+			format.W, err = strconv.Atoi(string(val))
+			if err != nil {
+				return nil, err
+			}
+		case "h":
+			var val []byte
+			val, err = l.expectNumber()
+			if err != nil {
+				return nil, err
+			}
+
+			format.H, err = strconv.Atoi(string(val))
+			if err != nil {
+				return nil, err
+			}
+		default:
+			if _, err = l.scanRaw(); err != nil {
+				return nil, err
+			}
+		}
+
+		token, err = l.next()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind == tokRBrace {
+			break
+		}
+		if token.kind != tokComma {
+			return nil, fmt.Errorf("expected ',', got %v", token.kind)
+		}
+	}
+
+	return &format, nil
+}
+
+func decodeBanner(l *lexer) (*Banner, error) {
+	var banner Banner
+
+	token, err := l.next()
+	if err != nil {
+		return nil, err
+	}
+	if token.kind != tokLBrace {
+		return nil, fmt.Errorf("expected '{', got %v", token.kind)
+	}
+
+	for {
+		token, err = l.next()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind == tokRBrace {
+			break
+		}
+
+		key := token
+		if key.kind != tokString {
+			return nil, fmt.Errorf("expected 'string', got %v", token.kind)
+		}
+
+		token, err = l.next()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind != tokColon {
+			return nil, fmt.Errorf("expected ':', got %v", token.kind)
+		}
+
+		switch string(key.val) {
+		case "format":
+			banner.Format, err = decodeFormatSlice(l)
+			if err != nil {
+				return nil, err
+			}
+
+		case "w":
+			var val []byte
+			val, err = l.expectNumber()
+			if err != nil {
+				return nil, err
+			}
+			var n int
+			n, err = strconv.Atoi(string(val))
+			if err != nil {
+				return nil, err
+			}
+			banner.W = &n
+		case "h":
+			var val []byte
+			val, err = l.expectNumber()
+			if err != nil {
+				return nil, err
+			}
+			var n int
+			n, err = strconv.Atoi(string(val))
+			if err != nil {
+				return nil, err
+			}
+			banner.H = &n
+		case "mimes":
+			banner.MIMEs, err = decodeStringSlice(l)
+			if err != nil {
+				return nil, err
+			}
+		case "pos":
+			var val []byte
+			val, err = l.expectNumber()
+			if err != nil {
+				return nil, err
+			}
+			var n int
+			n, err = strconv.Atoi(string(val))
+			if err != nil {
+				return nil, err
+			}
+			banner.Pos = &n
+		default:
+			if _, err = l.scanRaw(); err != nil {
+				return nil, err
+			}
+		}
+
+		token, err = l.next()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind == tokRBrace {
+			break
+		}
+		if token.kind != tokComma {
+			return nil, fmt.Errorf("expected ',', got %v", token.kind)
+		}
+	}
+
+	return &banner, nil
+}
+
+func decodeImp(l *lexer) (*Imp, error) {
+	var imp Imp
+
+	token, err := l.next()
+	if err != nil {
+		return nil, err
+	}
+	if token.kind != tokLBrace {
+		return nil, fmt.Errorf("expected '{', got %v", token.kind)
+	}
+
+	for {
+		token, err = l.next()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind == tokRBrace {
+			break
+		}
+
+		key := token
+		if key.kind != tokString {
+			return nil, fmt.Errorf("expected 'string', got %v", token.kind)
+		}
+
+		token, err = l.next()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind != tokColon {
+			return nil, fmt.Errorf("expected ':', got %v", token.kind)
+		}
+
+		switch string(key.val) {
+		case "id":
+			imp.ID, err = l.expectString()
+			if err != nil {
+				return nil, err
+			}
+
+		case "banner":
+			imp.Banner, err = decodeBanner(l)
+			if err != nil {
+				return nil, err
+			}
+		// case "video":
+		// case "native":
+		case "bidfloor":
+			var val []byte
+			val, err = l.expectNumber()
+			if err != nil {
+				return nil, err
+			}
+			var f float64
+			f, err = strconv.ParseFloat(string(val), 64)
+			if err != nil {
+				return nil, err
+			}
+			imp.BidFloor = &f
+		case "bidfloorcur":
+			imp.BidFloorCur, err = l.expectString()
+			if err != nil {
+				return nil, err
+			}
+		case "secure":
+			var val []byte
+			val, err = l.expectNumber()
+			if err != nil {
+				return nil, err
+			}
+			var n int
+			n, err = strconv.Atoi(string(val))
+			if err != nil {
+				return nil, err
+			}
+			imp.Secure = &n
+		default:
+			if _, err = l.scanRaw(); err != nil {
+				return nil, err
+			}
+		}
+
+		token, err = l.next()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind == tokRBrace {
+			break
+		}
+		if token.kind != tokComma {
+			return nil, fmt.Errorf("expected ',', got %v", token.kind)
+		}
+	}
+
+	return &imp, nil
+}
+
 func decodeStringSlice(l *lexer) ([]string, error) {
 	var slice []string
 	token, err := l.next()
@@ -597,6 +878,86 @@ func decodeIntSlice(l *lexer) ([]int, error) {
 			return nil, err
 		}
 		slice = append(slice, n)
+
+		token, err = l.next()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind == tokRBracket {
+			return slice, nil
+		}
+		if token.kind != tokComma {
+			return nil, fmt.Errorf("expected ',', got %v", token.kind)
+		}
+	}
+}
+
+func decodeFormatSlice(l *lexer) ([]Format, error) {
+	var slice []Format
+	token, err := l.next()
+	if err != nil {
+		return nil, err
+	}
+	if token.kind != tokLBracket {
+		return nil, fmt.Errorf("expected '[', got %v", token.kind)
+	}
+
+	for {
+		token, err = l.peek()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind == tokRBracket {
+			l.next()
+			return slice, nil
+		}
+
+		var format *Format
+		format, err = decodeFormat(l)
+		if err != nil {
+			return nil, err
+		}
+		slice = append(slice, *format)
+
+		token, err = l.next()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind == tokRBracket {
+			return slice, nil
+		}
+		if token.kind != tokComma {
+			return nil, fmt.Errorf("expected ',', got %v", token.kind)
+		}
+	}
+}
+
+func decodeImpSlice(l *lexer) ([]Imp, error) {
+	var slice []Imp
+	token, err := l.next()
+	if err != nil {
+		return nil, err
+	}
+	if token.kind != tokLBracket {
+		return nil, fmt.Errorf("expected '[', got %v", token.kind)
+	}
+
+	for {
+		token, err = l.peek()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind == tokRBracket {
+			l.next()
+			return slice, nil
+		}
+
+		var imp *Imp
+		imp, err = decodeImp(l)
+		if err != nil {
+			return nil, err
+		}
+		slice = append(slice, *imp)
 
 		token, err = l.next()
 		if err != nil {
