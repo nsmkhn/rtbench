@@ -64,6 +64,24 @@ func TestDecodeBidRequest(t *testing.T) {
 				}
 			},
 		},
+		{
+			name:  "site with publisher",
+			input: `{"id":"req-001","site":{"page":"https://example.com","publisher":{"id":"pub-123"}}}`,
+			check: func(t *testing.T, br *BidRequest) {
+				if br.Site == nil {
+					t.Fatalf("expected br.Site to be set, got nil")
+				}
+				if br.Site.Page != "https://example.com" {
+					t.Fatalf(`invalid br.Site.Page: expected "https://example.com", got %v`, br.Site.Page)
+				}
+				if br.Site.Publisher == nil {
+					t.Fatalf("expected br.Site.Publisher to be set, got nil")
+				}
+				if br.Site.Publisher.ID != "pub-123" {
+					t.Fatalf(`invalid br.Site.Publisher.ID: expected "pub-123", got %v`, br.Site.Publisher.ID)
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {

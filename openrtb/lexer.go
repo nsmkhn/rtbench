@@ -152,3 +152,27 @@ func (l *lexer) scanString() (token, error) {
 func (l *lexer) scanRaw() ([]byte, error) {
 	return nil, nil
 }
+
+func (l *lexer) expectString() (string, error) {
+	token, err := l.next()
+	if err != nil {
+		return "", err
+	}
+	if token.kind != tokString {
+		return "", fmt.Errorf("expected 'string', got %v", token.kind)
+	}
+
+	return string(token.val), nil
+}
+
+func (l *lexer) expectNumber() ([]byte, error) {
+	token, err := l.next()
+	if err != nil {
+		return nil, err
+	}
+	if token.kind != tokNumber {
+		return nil, fmt.Errorf("expected 'number', got %v", token.kind)
+	}
+
+	return token.val, nil
+}
