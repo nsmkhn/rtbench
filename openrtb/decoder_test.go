@@ -82,6 +82,39 @@ func TestDecodeBidRequest(t *testing.T) {
 				}
 			},
 		},
+		{
+			name:  "device and user",
+			input: `{"id":"req-001","device":{"ua":"Mozilla/5.0","ip":"192.168.1.1","os":"Windows","devicetype":1},"user":{"id":"user-abc","buyeruid":"buyer-xyz","yob":1990}}`,
+			check: func(t *testing.T, br *BidRequest) {
+				if br.Device == nil {
+					t.Fatalf("expected br.Device to be set, got nil")
+				}
+				if br.Device.UA != "Mozilla/5.0" {
+					t.Fatalf(`invalid br.Device.UA: expected "Mozilla/5.0", got %v`, br.Device.UA)
+				}
+				if br.Device.OS != "Windows" {
+					t.Fatalf(`invalid br.Device.OS: expected "Windows", got %v`, br.Device.OS)
+				}
+				if br.Device.DeviceType == nil {
+					t.Fatalf("expected br.Device.DeviceType to be set, got nil")
+				}
+				if *br.Device.DeviceType != 1 {
+					t.Fatalf("invalid br.Device.DeviceType: expected 1, got %v", *br.Device.DeviceType)
+				}
+				if br.User == nil {
+					t.Fatalf("expected br.User to be set, got nil")
+				}
+				if br.User.ID != "user-abc" {
+					t.Fatalf(`invalid br.User.ID: expected "user-abc", got %v`, br.User.ID)
+				}
+				if br.User.Yob == nil {
+					t.Fatalf("expected br.User.Yob to be set, got nil")
+				}
+				if *br.User.Yob != 1990 {
+					t.Fatalf("invalid br.User.Yob: expected 1990, got %v", *br.User.Yob)
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {
