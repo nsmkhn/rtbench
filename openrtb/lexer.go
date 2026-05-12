@@ -274,3 +274,24 @@ func (l *lexer) readNumberBytes() ([]byte, error) {
 	}
 	return l.input[start:l.pos], nil
 }
+
+func parseIntBytes(b []byte) (int, error) {
+	if len(b) == 0 {
+		return 0, fmt.Errorf("parseIntBytes: empty input")
+	}
+	neg := b[0] == '-'
+	if neg {
+		b = b[1:]
+	}
+	n := 0
+	for _, c := range b {
+		if c < '0' || c > '9' {
+			return 0, fmt.Errorf("parseIntBytes: invalid byte %q", c)
+		}
+		n = n*10 + int(c-'0')
+	}
+	if neg {
+		return -n, nil
+	}
+	return n, nil
+}

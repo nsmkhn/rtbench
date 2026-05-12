@@ -1,9 +1,1 @@
-{
-  "id": "req-005",
-  "imp": [
-    {
-      "id": "imp-001",
-      "bidfloor": 1.0
-    }
-  ]
-}
+{"id":"req-005","imp":[{"id":"imp-001","bidfloor":1.0}]}

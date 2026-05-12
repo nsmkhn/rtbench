@@ -44,7 +44,7 @@ func decodeBidRequest(l *lexer) (*BidRequest, error) {
 				return nil, err
 			}
 			var n int
-			n, err = strconv.Atoi(string(val))
+			n, err = parseIntBytes(val)
 			if err != nil {
 				return nil, err
 			}
@@ -56,7 +56,7 @@ func decodeBidRequest(l *lexer) (*BidRequest, error) {
 				return nil, err
 			}
 			var n int
-			n, err = strconv.Atoi(string(val))
+			n, err = parseIntBytes(val)
 			if err != nil {
 				return nil, err
 			}
@@ -361,7 +361,7 @@ func decodeDevice(l *lexer) (*Device, error) {
 				return nil, err
 			}
 			var n int
-			n, err = strconv.Atoi(string(val))
+			n, err = parseIntBytes(val)
 			if err != nil {
 				return nil, err
 			}
@@ -455,7 +455,7 @@ func decodeUser(l *lexer) (*User, error) {
 				return nil, err
 			}
 			var n int
-			n, err = strconv.Atoi(string(val))
+			n, err = parseIntBytes(val)
 			if err != nil {
 				return nil, err
 			}
@@ -516,7 +516,7 @@ func decodeFormat(l *lexer, format *Format) error {
 			if err != nil {
 				return err
 			}
-			format.W, err = strconv.Atoi(string(val))
+			format.W, err = parseIntBytes(val)
 			if err != nil {
 				return err
 			}
@@ -526,7 +526,7 @@ func decodeFormat(l *lexer, format *Format) error {
 			if err != nil {
 				return err
 			}
-			format.H, err = strconv.Atoi(string(val))
+			format.H, err = parseIntBytes(val)
 			if err != nil {
 				return err
 			}
@@ -584,7 +584,7 @@ func decodeBanner(l *lexer) (*Banner, error) {
 				return nil, err
 			}
 			var n int
-			n, err = strconv.Atoi(string(val))
+			n, err = parseIntBytes(val)
 			if err != nil {
 				return nil, err
 			}
@@ -596,7 +596,7 @@ func decodeBanner(l *lexer) (*Banner, error) {
 				return nil, err
 			}
 			var n int
-			n, err = strconv.Atoi(string(val))
+			n, err = parseIntBytes(val)
 			if err != nil {
 				return nil, err
 			}
@@ -613,7 +613,7 @@ func decodeBanner(l *lexer) (*Banner, error) {
 				return nil, err
 			}
 			var n int
-			n, err = strconv.Atoi(string(val))
+			n, err = parseIntBytes(val)
 			if err != nil {
 				return nil, err
 			}
@@ -690,7 +690,7 @@ func decodeImp(l *lexer, imp *Imp) error {
 				return err
 			}
 			var f float64
-			f, err = strconv.ParseFloat(string(val), 64)
+			f, err = strconv.ParseFloat(bytesToString(val), 64)
 			if err != nil {
 				return err
 			}
@@ -707,7 +707,7 @@ func decodeImp(l *lexer, imp *Imp) error {
 				return err
 			}
 			var n int
-			n, err = strconv.Atoi(string(val))
+			n, err = parseIntBytes(val)
 			if err != nil {
 				return err
 			}
@@ -830,7 +830,7 @@ func decodeVideo(l *lexer) (*Video, error) {
 				return nil, err
 			}
 			var n int
-			n, err = strconv.Atoi(string(val))
+			n, err = parseIntBytes(val)
 			if err != nil {
 				return nil, err
 			}
@@ -842,7 +842,7 @@ func decodeVideo(l *lexer) (*Video, error) {
 				return nil, err
 			}
 			var n int
-			n, err = strconv.Atoi(string(val))
+			n, err = parseIntBytes(val)
 			if err != nil {
 				return nil, err
 			}
@@ -859,7 +859,7 @@ func decodeVideo(l *lexer) (*Video, error) {
 				return nil, err
 			}
 			var n int
-			n, err = strconv.Atoi(string(val))
+			n, err = parseIntBytes(val)
 			if err != nil {
 				return nil, err
 			}
@@ -871,7 +871,7 @@ func decodeVideo(l *lexer) (*Video, error) {
 				return nil, err
 			}
 			var n int
-			n, err = strconv.Atoi(string(val))
+			n, err = parseIntBytes(val)
 			if err != nil {
 				return nil, err
 			}
@@ -883,7 +883,7 @@ func decodeVideo(l *lexer) (*Video, error) {
 				return nil, err
 			}
 			var n int
-			n, err = strconv.Atoi(string(val))
+			n, err = parseIntBytes(val)
 			if err != nil {
 				return nil, err
 			}
@@ -895,7 +895,7 @@ func decodeVideo(l *lexer) (*Video, error) {
 				return nil, err
 			}
 			var n int
-			n, err = strconv.Atoi(string(val))
+			n, err = parseIntBytes(val)
 			if err != nil {
 				return nil, err
 			}
@@ -975,7 +975,7 @@ func decodeIntSlice(l *lexer) ([]int, error) {
 		if err != nil {
 			return nil, err
 		}
-		n, err := strconv.Atoi(string(val))
+		n, err := parseIntBytes(val)
 		if err != nil {
 			return nil, err
 		}
