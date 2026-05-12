@@ -28,9 +28,10 @@ type token struct {
 }
 
 type lexer struct {
-	input  []byte
-	pos    int
-	peeked *token
+	input     []byte
+	pos       int
+	peeked    token
+	hasPeeked bool
 }
 
 func newLexer(data []byte) *lexer {
@@ -42,15 +43,16 @@ func (l *lexer) peek() (token, error) {
 	if err != nil {
 		return token{}, err
 	}
-	l.peeked = &tok
+	l.peeked = tok
+	l.hasPeeked = true
 
 	return tok, nil
 }
 
 func (l *lexer) next() (token, error) {
-	if l.peeked != nil {
-		tok := *l.peeked
-		l.peeked = nil
+	if l.hasPeeked {
+		tok := l.peeked
+		l.hasPeeked = false
 		return tok, nil
 	}
 

@@ -581,21 +581,19 @@ func decodeUser(l *lexer) (*User, error) {
 	return &user, nil
 }
 
-func decodeFormat(l *lexer) (*Format, error) {
-	var format Format
-
+func decodeFormat(l *lexer, format *Format) error {
 	token, err := l.next()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if token.kind != tokLBrace {
-		return nil, fmt.Errorf("expected '{', got %v", token.kind)
+		return fmt.Errorf("expected '{', got %v", token.kind)
 	}
 
 	for {
 		token, err = l.next()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if token.kind == tokRBrace {
 			break
@@ -603,15 +601,15 @@ func decodeFormat(l *lexer) (*Format, error) {
 
 		key := token
 		if key.kind != tokString {
-			return nil, fmt.Errorf("expected 'string', got %v", token.kind)
+			return fmt.Errorf("expected 'string', got %v", token.kind)
 		}
 
 		token, err = l.next()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if token.kind != tokColon {
-			return nil, fmt.Errorf("expected ':', got %v", token.kind)
+			return fmt.Errorf("expected ':', got %v", token.kind)
 		}
 
 		switch string(key.val) {
@@ -619,43 +617,43 @@ func decodeFormat(l *lexer) (*Format, error) {
 			var val []byte
 			val, err = l.expectNumber()
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			format.W, err = strconv.Atoi(string(val))
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "h":
 			var val []byte
 			val, err = l.expectNumber()
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			format.H, err = strconv.Atoi(string(val))
 			if err != nil {
-				return nil, err
+				return err
 			}
 		default:
 			if _, err = l.scanRaw(); err != nil {
-				return nil, err
+				return err
 			}
 		}
 
 		token, err = l.next()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if token.kind == tokRBrace {
 			break
 		}
 		if token.kind != tokComma {
-			return nil, fmt.Errorf("expected ',', got %v", token.kind)
+			return fmt.Errorf("expected ',', got %v", token.kind)
 		}
 	}
 
-	return &format, nil
+	return nil
 }
 
 func decodeBanner(l *lexer) (*Banner, error) {
@@ -767,21 +765,19 @@ func decodeBanner(l *lexer) (*Banner, error) {
 	return &banner, nil
 }
 
-func decodeImp(l *lexer) (*Imp, error) {
-	var imp Imp
-
+func decodeImp(l *lexer, imp *Imp) error {
 	token, err := l.next()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if token.kind != tokLBrace {
-		return nil, fmt.Errorf("expected '{', got %v", token.kind)
+		return fmt.Errorf("expected '{', got %v", token.kind)
 	}
 
 	for {
 		token, err = l.next()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if token.kind == tokRBrace {
 			break
@@ -789,94 +785,94 @@ func decodeImp(l *lexer) (*Imp, error) {
 
 		key := token
 		if key.kind != tokString {
-			return nil, fmt.Errorf("expected 'string', got %v", token.kind)
+			return fmt.Errorf("expected 'string', got %v", token.kind)
 		}
 
 		token, err = l.next()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if token.kind != tokColon {
-			return nil, fmt.Errorf("expected ':', got %v", token.kind)
+			return fmt.Errorf("expected ':', got %v", token.kind)
 		}
 
 		switch string(key.val) {
 		case "id":
 			imp.ID, err = l.expectString()
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 		case "banner":
 			imp.Banner, err = decodeBanner(l)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "video":
 			imp.Video, err = decodeVideo(l)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "native":
 			imp.Native, err = decodeNative(l)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "bidfloor":
 			var val []byte
 			val, err = l.expectNumber()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			var f float64
 			f, err = strconv.ParseFloat(string(val), 64)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			imp.BidFloor = &f
 		case "bidfloorcur":
 			imp.BidFloorCur, err = l.expectString()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "secure":
 			var val []byte
 			val, err = l.expectNumber()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			var n int
 			n, err = strconv.Atoi(string(val))
 			if err != nil {
-				return nil, err
+				return err
 			}
 			imp.Secure = &n
 		case "ext":
 			var raw []byte
 			raw, err = l.scanRaw()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			imp.Ext = raw
 		default:
 			if _, err = l.scanRaw(); err != nil {
-				return nil, err
+				return err
 			}
 		}
 
 		token, err = l.next()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if token.kind == tokRBrace {
 			break
 		}
 		if token.kind != tokComma {
-			return nil, fmt.Errorf("expected ',', got %v", token.kind)
+			return fmt.Errorf("expected ',', got %v", token.kind)
 		}
 	}
 
-	return &imp, nil
+	return nil
 }
 
 func decodeNative(l *lexer) (*Native, error) {
@@ -1200,12 +1196,10 @@ func decodeFormatSlice(l *lexer) ([]Format, error) {
 			return slice, nil
 		}
 
-		var format *Format
-		format, err = decodeFormat(l)
-		if err != nil {
+		slice = append(slice, Format{})
+		if err = decodeFormat(l, &slice[len(slice)-1]); err != nil {
 			return nil, err
 		}
-		slice = append(slice, *format)
 
 		token, err = l.next()
 		if err != nil {
@@ -1240,12 +1234,10 @@ func decodeImpSlice(l *lexer) ([]Imp, error) {
 			return slice, nil
 		}
 
-		var imp *Imp
-		imp, err = decodeImp(l)
-		if err != nil {
+		slice = append(slice, Imp{})
+		if err = decodeImp(l, &slice[len(slice)-1]); err != nil {
 			return nil, err
 		}
-		slice = append(slice, *imp)
 
 		token, err = l.next()
 		if err != nil {
