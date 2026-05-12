@@ -103,6 +103,13 @@ func decodeBidRequest(l *lexer) (*BidRequest, error) {
 			if err != nil {
 				return nil, err
 			}
+		case "ext":
+			var raw []byte
+			raw, err = l.scanRaw()
+			if err != nil {
+				return nil, err
+			}
+			br.Ext = raw
 		default:
 			if _, err = l.scanRaw(); err != nil {
 				return nil, err
@@ -173,6 +180,13 @@ func decodePublisher(l *lexer) (*Publisher, error) {
 			if err != nil {
 				return nil, err
 			}
+		case "ext":
+			var raw []byte
+			raw, err = l.scanRaw()
+			if err != nil {
+				return nil, err
+			}
+			pub.Ext = raw
 		default:
 			if _, err = l.scanRaw(); err != nil {
 				return nil, err
@@ -253,6 +267,13 @@ func decodeSite(l *lexer) (*Site, error) {
 			if err != nil {
 				return nil, err
 			}
+		case "ext":
+			var raw []byte
+			raw, err = l.scanRaw()
+			if err != nil {
+				return nil, err
+			}
+			site.Ext = raw
 		default:
 			if _, err = l.scanRaw(); err != nil {
 				return nil, err
@@ -333,6 +354,13 @@ func decodeApp(l *lexer) (*App, error) {
 			if err != nil {
 				return nil, err
 			}
+		case "ext":
+			var raw []byte
+			raw, err = l.scanRaw()
+			if err != nil {
+				return nil, err
+			}
+			app.Ext = raw
 		default:
 			if _, err = l.scanRaw(); err != nil {
 				return nil, err
@@ -436,6 +464,13 @@ func decodeDevice(l *lexer) (*Device, error) {
 			if err != nil {
 				return nil, err
 			}
+		case "ext":
+			var raw []byte
+			raw, err = l.scanRaw()
+			if err != nil {
+				return nil, err
+			}
+			device.Ext = raw
 		default:
 			if _, err = l.scanRaw(); err != nil {
 				return nil, err
@@ -518,6 +553,13 @@ func decodeUser(l *lexer) (*User, error) {
 			if err != nil {
 				return nil, err
 			}
+		case "ext":
+			var raw []byte
+			raw, err = l.scanRaw()
+			if err != nil {
+				return nil, err
+			}
+			user.Ext = raw
 		default:
 			if _, err = l.scanRaw(); err != nil {
 				return nil, err
@@ -697,6 +739,13 @@ func decodeBanner(l *lexer) (*Banner, error) {
 				return nil, err
 			}
 			banner.Pos = &n
+		case "ext":
+			var raw []byte
+			raw, err = l.scanRaw()
+			if err != nil {
+				return nil, err
+			}
+			banner.Ext = raw
 		default:
 			if _, err = l.scanRaw(); err != nil {
 				return nil, err
@@ -802,6 +851,13 @@ func decodeImp(l *lexer) (*Imp, error) {
 				return nil, err
 			}
 			imp.Secure = &n
+		case "ext":
+			var raw []byte
+			raw, err = l.scanRaw()
+			if err != nil {
+				return nil, err
+			}
+			imp.Ext = raw
 		default:
 			if _, err = l.scanRaw(); err != nil {
 				return nil, err
@@ -869,6 +925,13 @@ func decodeNative(l *lexer) (*Native, error) {
 				return nil, err
 			}
 			native.Ver = &s
+		case "ext":
+			var raw []byte
+			raw, err = l.scanRaw()
+			if err != nil {
+				return nil, err
+			}
+			native.Ext = raw
 		default:
 			if _, err = l.scanRaw(); err != nil {
 				return nil, err
@@ -1012,6 +1075,13 @@ func decodeVideo(l *lexer) (*Video, error) {
 			if err != nil {
 				return nil, err
 			}
+		case "ext":
+			var raw []byte
+			raw, err = l.scanRaw()
+			if err != nil {
+				return nil, err
+			}
+			video.Ext = raw
 		default:
 			if _, err = l.scanRaw(); err != nil {
 				return nil, err

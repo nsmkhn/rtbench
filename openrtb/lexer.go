@@ -167,7 +167,95 @@ func (l *lexer) scanString() (token, error) {
 }
 
 func (l *lexer) scanRaw() ([]byte, error) {
-	return nil, nil
+	for l.pos < len(l.input) && (l.input[l.pos] == ' ' || l.input[l.pos] == '\n' ||
+		l.input[l.pos] == '\t' || l.input[l.pos] == '\r') {
+		l.pos++
+	}
+
+	if l.pos >= len(l.input) {
+		return nil, fmt.Errorf("scanRaw: unexpected end of input")
+	}
+
+	start := l.pos
+	ch := l.input[l.pos]
+
+	switch ch {
+	case '"':
+		l.pos++
+		for l.pos < len(l.input) && l.input[l.pos] != '"' {
+			if l.input[l.pos] == '\\' {
+				l.pos += 2
+			} else {
+				l.pos++
+			}
+		}
+		if l.pos >= len(l.input) {
+			return nil, fmt.Errorf("scanRaw: unterminated string")
+		}
+		l.pos++
+	case '{', '[':
+		depth := 1
+		inString := false
+		l.pos++
+		for depth != 0 {
+			if l.pos >= len(l.input) {
+				return nil, fmt.Errorf("scanRaw: unterminated object/array")
+			}
+
+			if inString {
+				if l.input[l.pos] == '\\' {
+					l.pos += 2
+					continue
+				}
+				if l.input[l.pos] == '"' {
+					inString = false
+					l.pos++
+					continue
+				}
+				l.pos++
+				continue
+			}
+
+			if l.input[l.pos] == '"' {
+				inString = true
+				l.pos++
+				continue
+			}
+
+			if (l.input[l.pos] == '{' || l.input[l.pos] == '[') && !inString {
+				depth++
+			}
+			if (l.input[l.pos] == '}' || l.input[l.pos] == ']') && !inString {
+				depth--
+			}
+			l.pos++
+		}
+	case 't':
+		if l.pos+4 > len(l.input) {
+			return nil, fmt.Errorf("scanRaw: unexpected end of input")
+		}
+		l.pos += 4
+	case 'f':
+		if l.pos+5 > len(l.input) {
+			return nil, fmt.Errorf("scanRaw: unexpected end of input")
+		}
+		l.pos += 5
+	case 'n':
+		if l.pos+4 > len(l.input) {
+			return nil, fmt.Errorf("scanRaw: unexpected end of input")
+		}
+		l.pos += 4
+	default:
+		if ch == '-' || (ch >= '0' && ch <= '9') {
+			for l.pos < len(l.input) && ((l.input[l.pos] >= '0' && l.input[l.pos] <= '9') ||
+				l.input[l.pos] == '.' || l.input[l.pos] == 'e' || l.input[l.pos] == 'E' ||
+				l.input[l.pos] == '+' || l.input[l.pos] == '-') {
+				l.pos++
+			}
+		}
+	}
+
+	return l.input[start:l.pos], nil
 }
 
 func (l *lexer) expectString() (string, error) {

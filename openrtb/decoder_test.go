@@ -167,6 +167,18 @@ func TestDecodeBidRequest(t *testing.T) {
 			},
 		},
 		{
+			name:  "ext field",
+			input: `{"id":"req-001","ext":{"key":"value"}}`,
+			check: func(t *testing.T, br *BidRequest) {
+				if br.Ext == nil {
+					t.Fatalf("expected br.Ext to be set, got nil")
+				}
+				if string(br.Ext) != `{"key":"value"}` {
+					t.Fatalf(`invalid br.Ext: expected {"key":"value"}, got %s`, br.Ext)
+				}
+			},
+		},
+		{
 			name:  "imp with video",
 			input: `{"id":"req-002","imp":[{"id":"imp-001","video":{"mimes":["video/mp4"],"minduration":5,"maxduration":30,"protocols":[2,3]}}]}`,
 			check: func(t *testing.T, br *BidRequest) {
