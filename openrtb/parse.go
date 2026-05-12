@@ -17,6 +17,9 @@ func Parse(data []byte) (*BidRequest, error) {
 	return &br, nil
 }
 
+// ParseFast decodes raw JSON into a BidRequest using a hand-written decoder.
+// String fields in the returned BidRequest point into data — do not modify
+// data while the BidRequest is in use.
 func ParseFast(data []byte) (*BidRequest, error) {
 	l := newLexer(data)
 	return decodeBidRequest(l)

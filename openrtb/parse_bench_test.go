@@ -127,3 +127,20 @@ func BenchmarkParse_HandWritten(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkParse_HandWrittenParallel(b *testing.B) {
+	data, err := os.ReadFile("../testdata/valid_banner.json")
+	if err != nil {
+		b.Fatalf("could not read testdata: %v", err)
+	}
+
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_, err := ParseFast(data)
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+}
