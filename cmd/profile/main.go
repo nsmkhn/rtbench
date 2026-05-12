@@ -14,7 +14,7 @@ import (
 const iterations = 200_000
 
 func main() {
-	impl := flag.String("impl", "stdlib", "json implementation: stdlib or gojson")
+	impl := flag.String("impl", "stdlib", "json implementation: stdlib, gojson, or handwritten")
 	flag.Parse()
 
 	data, err := os.ReadFile("testdata/valid_banner.json")
@@ -39,6 +39,11 @@ func main() {
 			var br openrtb.BidRequest
 			if err := gojson.Unmarshal(data, &br); err != nil {
 				log.Fatalf("gojson parse error: %v", err)
+			}
+		case "handwritten":
+			_, err := openrtb.ParseFast(data)
+			if err != nil {
+				log.Fatalf("parse error: %v", err)
 			}
 		default:
 			_, err := openrtb.Parse(data)

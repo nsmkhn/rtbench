@@ -112,3 +112,18 @@ func BenchmarkParse_GoJsonPoolParallel(b *testing.B) {
 		}
 	})
 }
+
+func BenchmarkParse_HandWritten(b *testing.B) {
+	data, err := os.ReadFile("../testdata/valid_banner.json")
+	if err != nil {
+		b.Fatalf("could not read testdata: %v", err)
+	}
+
+	b.ResetTimer()
+	for b.Loop() {
+		_, err := ParseFast(data)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}

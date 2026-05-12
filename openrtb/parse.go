@@ -17,6 +17,11 @@ func Parse(data []byte) (*BidRequest, error) {
 	return &br, nil
 }
 
+func ParseFast(data []byte) (*BidRequest, error) {
+	l := newLexer(data)
+	return decodeBidRequest(l)
+}
+
 // Validate checks a parsed BidRequest against OpenRTB 2.6 required fields rules.
 // Returns all violations found, not just the first
 func Validate(br *BidRequest) []error {
