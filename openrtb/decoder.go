@@ -763,8 +763,16 @@ func decodeImp(l *lexer) (*Imp, error) {
 			if err != nil {
 				return nil, err
 			}
-		// case "video":
-		// case "native":
+		case "video":
+			imp.Video, err = decodeVideo(l)
+			if err != nil {
+				return nil, err
+			}
+		case "native":
+			imp.Native, err = decodeNative(l)
+			if err != nil {
+				return nil, err
+			}
 		case "bidfloor":
 			var val []byte
 			val, err = l.expectNumber()
@@ -813,6 +821,216 @@ func decodeImp(l *lexer) (*Imp, error) {
 	}
 
 	return &imp, nil
+}
+
+func decodeNative(l *lexer) (*Native, error) {
+	var native Native
+
+	token, err := l.next()
+	if err != nil {
+		return nil, err
+	}
+	if token.kind != tokLBrace {
+		return nil, fmt.Errorf("expected '{', got %v", token.kind)
+	}
+
+	for {
+		token, err = l.next()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind == tokRBrace {
+			break
+		}
+
+		key := token
+		if key.kind != tokString {
+			return nil, fmt.Errorf("expected 'string', got %v", token.kind)
+		}
+
+		token, err = l.next()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind != tokColon {
+			return nil, fmt.Errorf("expected ':', got %v", token.kind)
+		}
+
+		switch string(key.val) {
+		case "request":
+			native.Request, err = l.expectString()
+			if err != nil {
+				return nil, err
+			}
+		case "ver":
+			var s string
+			s, err = l.expectString()
+			if err != nil {
+				return nil, err
+			}
+			native.Ver = &s
+		default:
+			if _, err = l.scanRaw(); err != nil {
+				return nil, err
+			}
+		}
+
+		token, err = l.next()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind == tokRBrace {
+			break
+		}
+		if token.kind != tokComma {
+			return nil, fmt.Errorf("expected ',', got %v", token.kind)
+		}
+	}
+
+	return &native, nil
+}
+
+func decodeVideo(l *lexer) (*Video, error) {
+	var video Video
+
+	token, err := l.next()
+	if err != nil {
+		return nil, err
+	}
+	if token.kind != tokLBrace {
+		return nil, fmt.Errorf("expected '{', got %v", token.kind)
+	}
+
+	for {
+		token, err = l.next()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind == tokRBrace {
+			break
+		}
+
+		key := token
+		if key.kind != tokString {
+			return nil, fmt.Errorf("expected 'string', got %v", token.kind)
+		}
+
+		token, err = l.next()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind != tokColon {
+			return nil, fmt.Errorf("expected ':', got %v", token.kind)
+		}
+
+		switch string(key.val) {
+		case "mimes":
+			video.MIMEs, err = decodeStringSlice(l)
+			if err != nil {
+				return nil, err
+			}
+		case "minduration":
+			var val []byte
+			val, err = l.expectNumber()
+			if err != nil {
+				return nil, err
+			}
+			var n int
+			n, err = strconv.Atoi(string(val))
+			if err != nil {
+				return nil, err
+			}
+			video.MinDuration = &n
+		case "maxduration":
+			var val []byte
+			val, err = l.expectNumber()
+			if err != nil {
+				return nil, err
+			}
+			var n int
+			n, err = strconv.Atoi(string(val))
+			if err != nil {
+				return nil, err
+			}
+			video.MaxDuration = &n
+
+		case "protocols":
+			video.Protocols, err = decodeIntSlice(l)
+			if err != nil {
+				return nil, err
+			}
+		case "w":
+			var val []byte
+			val, err = l.expectNumber()
+			if err != nil {
+				return nil, err
+			}
+			var n int
+			n, err = strconv.Atoi(string(val))
+			if err != nil {
+				return nil, err
+			}
+			video.W = &n
+		case "h":
+			var val []byte
+			val, err = l.expectNumber()
+			if err != nil {
+				return nil, err
+			}
+			var n int
+			n, err = strconv.Atoi(string(val))
+			if err != nil {
+				return nil, err
+			}
+			video.H = &n
+		case "linearity":
+			var val []byte
+			val, err = l.expectNumber()
+			if err != nil {
+				return nil, err
+			}
+			var n int
+			n, err = strconv.Atoi(string(val))
+			if err != nil {
+				return nil, err
+			}
+			video.Linearity = &n
+		case "skip":
+			var val []byte
+			val, err = l.expectNumber()
+			if err != nil {
+				return nil, err
+			}
+			var n int
+			n, err = strconv.Atoi(string(val))
+			if err != nil {
+				return nil, err
+			}
+			video.Skip = &n
+		case "playbackmethod":
+			video.PlaybackMethod, err = decodeIntSlice(l)
+			if err != nil {
+				return nil, err
+			}
+		default:
+			if _, err = l.scanRaw(); err != nil {
+				return nil, err
+			}
+		}
+
+		token, err = l.next()
+		if err != nil {
+			return nil, err
+		}
+		if token.kind == tokRBrace {
+			break
+		}
+		if token.kind != tokComma {
+			return nil, fmt.Errorf("expected ',', got %v", token.kind)
+		}
+	}
+
+	return &video, nil
 }
 
 func decodeStringSlice(l *lexer) ([]string, error) {

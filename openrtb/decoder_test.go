@@ -145,6 +145,54 @@ func TestDecodeBidRequest(t *testing.T) {
 				}
 			},
 		},
+		{
+			name:  "imp with native",
+			input: `{"id":"req-003","imp":[{"id":"imp-001","native":{"request":"{\"ver\":\"1.1\"}","ver":"1.1"}}]}`,
+			check: func(t *testing.T, br *BidRequest) {
+				if len(br.Imp) != 1 {
+					t.Fatalf("expected 1 imp, got %d", len(br.Imp))
+				}
+				if br.Imp[0].Native == nil {
+					t.Fatalf("expected Imp[0].Native to be set, got nil")
+				}
+				if br.Imp[0].Native.Request != `{"ver":"1.1"}` {
+					t.Fatalf(`invalid Native.Request: got %v`, br.Imp[0].Native.Request)
+				}
+				if br.Imp[0].Native.Ver == nil {
+					t.Fatalf("expected Native.Ver to be set, got nil")
+				}
+				if *br.Imp[0].Native.Ver != "1.1" {
+					t.Fatalf(`invalid Native.Ver: expected "1.1", got %v`, *br.Imp[0].Native.Ver)
+				}
+			},
+		},
+		{
+			name:  "imp with video",
+			input: `{"id":"req-002","imp":[{"id":"imp-001","video":{"mimes":["video/mp4"],"minduration":5,"maxduration":30,"protocols":[2,3]}}]}`,
+			check: func(t *testing.T, br *BidRequest) {
+				if len(br.Imp) != 1 {
+					t.Fatalf("expected 1 imp, got %d", len(br.Imp))
+				}
+				if br.Imp[0].Video == nil {
+					t.Fatalf("expected Imp[0].Video to be set, got nil")
+				}
+				if len(br.Imp[0].Video.MIMEs) != 1 || br.Imp[0].Video.MIMEs[0] != "video/mp4" {
+					t.Fatalf(`invalid Video.MIMEs: expected ["video/mp4"], got %v`, br.Imp[0].Video.MIMEs)
+				}
+				if len(br.Imp[0].Video.Protocols) != 2 {
+					t.Fatalf("expected 2 protocols, got %d", len(br.Imp[0].Video.Protocols))
+				}
+				if br.Imp[0].Video.Protocols[0] != 2 || br.Imp[0].Video.Protocols[1] != 3 {
+					t.Fatalf("invalid Protocols: expected [2,3], got %v", br.Imp[0].Video.Protocols)
+				}
+				if br.Imp[0].Video.MinDuration == nil || *br.Imp[0].Video.MinDuration != 5 {
+					t.Fatalf("invalid MinDuration: expected 5, got %v", br.Imp[0].Video.MinDuration)
+				}
+				if br.Imp[0].Video.MaxDuration == nil || *br.Imp[0].Video.MaxDuration != 30 {
+					t.Fatalf("invalid MaxDuration: expected 30, got %v", br.Imp[0].Video.MaxDuration)
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {
