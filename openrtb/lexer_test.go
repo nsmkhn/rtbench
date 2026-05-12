@@ -1,82 +1,156 @@
 package openrtb
 
 import (
-	"os"
 	"testing"
 )
 
-func TestLexer_ValidJSON(t *testing.T) {
-	data, err := os.ReadFile("../testdata/valid_banner.json")
+func TestLexer_Helpers(t *testing.T) {
+	input := `{"id":"req-001","at":2,"w":300}`
+	l := newLexer([]byte(input))
+
+	if err := l.skipOpen(); err != nil {
+		t.Fatalf("skipOpen: %v", err)
+	}
+
+	// "id": "req-001"
+	key, err := l.readKey()
 	if err != nil {
-		t.Fatalf("could not read testdata/valid_banner.json: %v", err)
+		t.Fatalf("readKey: %v", err)
 	}
-
-	l := newLexer(data)
-
-	tok, err := l.next()
+	if string(key) != "id" {
+		t.Fatalf(`expected key "id", got %q`, string(key))
+	}
+	if err = l.skipColon(); err != nil {
+		t.Fatalf("skipColon: %v", err)
+	}
+	val, err := l.readStringVal()
 	if err != nil {
-		t.Fatalf("%v", err)
+		t.Fatalf("readStringVal: %v", err)
 	}
-
-	if tok.kind != tokLBrace {
-		t.Fatalf("expected token tokLBrace, got %v", tok.kind)
+	if val != "req-001" {
+		t.Fatalf(`expected "req-001", got %q`, val)
 	}
-
-	tok, err = l.next()
+	done, err := l.readSep('}')
 	if err != nil {
-		t.Fatalf("%v", err)
+		t.Fatalf("readSep: %v", err)
+	}
+	if done {
+		t.Fatalf("expected more fields, got closing brace")
 	}
 
-	if tok.kind != tokString || string(tok.val) != "id" {
-		t.Fatalf("expected token tokString with val \"id\", got kind=%v, val=%q", tok.kind, tok.val)
-	}
-
-	tok, err = l.next()
+	// "at": 2
+	key, err = l.readKey()
 	if err != nil {
-		t.Fatalf("%v", err)
+		t.Fatalf("readKey: %v", err)
 	}
-
-	if tok.kind != tokColon {
-		t.Fatalf("expected token tokColon, got %v", tok.kind)
+	if string(key) != "at" {
+		t.Fatalf(`expected key "at", got %q`, string(key))
 	}
-
-	tok, err = l.next()
+	if err = l.skipColon(); err != nil {
+		t.Fatalf("skipColon: %v", err)
+	}
+	num, err := l.readNumberBytes()
 	if err != nil {
-		t.Fatalf("%v", err)
+		t.Fatalf("readNumberBytes: %v", err)
+	}
+	if string(num) != "2" {
+		t.Fatalf(`expected "2", got %q`, string(num))
+	}
+	done, err = l.readSep('}')
+	if err != nil {
+		t.Fatalf("readSep: %v", err)
+	}
+	if done {
+		t.Fatalf("expected more fields, got closing brace")
 	}
 
-	if tok.kind != tokString || string(tok.val) != "req-001" {
-		t.Fatalf("expected token tokString with val \"req-001\", got kind=%v, val=%q", tok.kind, tok.val)
+	// "w": 300
+	key, err = l.readKey()
+	if err != nil {
+		t.Fatalf("readKey: %v", err)
+	}
+	if string(key) != "w" {
+		t.Fatalf(`expected key "w", got %q`, string(key))
+	}
+	if err = l.skipColon(); err != nil {
+		t.Fatalf("skipColon: %v", err)
+	}
+	num, err = l.readNumberBytes()
+	if err != nil {
+		t.Fatalf("readNumberBytes: %v", err)
+	}
+	if string(num) != "300" {
+		t.Fatalf(`expected "300", got %q`, string(num))
+	}
+	done, err = l.readSep('}')
+	if err != nil {
+		t.Fatalf("readSep: %v", err)
+	}
+	if !done {
+		t.Fatalf("expected closing brace")
+	}
+}
+
+func TestLexer_ScanRaw(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{"string", `"hello"`, `"hello"`},
+		{"number", `42`, `42`},
+		{"float", `3.14`, `3.14`},
+		{"true", `true`, `true`},
+		{"false", `false`, `false`},
+		{"null", `null`, `null`},
+		{"object", `{"a":1}`, `{"a":1}`},
+		{"array", `[1,2,3]`, `[1,2,3]`},
+		{"nested", `{"a":{"b":2}}`, `{"a":{"b":2}}`},
+		{"string with escape", `"he\"llo"`, `"he\"llo"`},
+		{"object with escaped string val", `{"a":"b\"c"}`, `{"a":"b\"c"}`},
+		{"object with brace in string", `{"a":"x}y"}`, `{"a":"x}y"}`},
 	}
 
-	for {
-		tok, err = l.next()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := newLexer([]byte(tt.input))
+			got, err := l.scanRaw()
+			if err != nil {
+				t.Fatalf("scanRaw: %v", err)
+			}
+			if string(got) != tt.want {
+				t.Fatalf("expected %q, got %q", tt.want, string(got))
+			}
+		})
+	}
+}
+
+func TestLexer_ReadSep_Array(t *testing.T) {
+	// Test readSep with ']' close
+	input := `[1,2]`
+	l := newLexer([]byte(input))
+
+	if err := l.skipOpen(); err != nil {
+		t.Fatalf("skipOpen: %v", err)
+	}
+
+	for i, want := range []string{"1", "2"} {
+		num, err := l.readNumberBytes()
 		if err != nil {
-			t.Fatalf("%v", err)
+			t.Fatalf("[%d] readNumberBytes: %v", i, err)
 		}
-		if tok.kind == tokEOF {
-			t.Fatalf("reached EOF before finding \"w\" token")
+		if string(num) != want {
+			t.Fatalf("[%d] expected %q, got %q", i, want, string(num))
 		}
-		if tok.kind == tokString && string(tok.val) == "w" {
-			break
+		done, err := l.readSep(']')
+		if err != nil {
+			t.Fatalf("[%d] readSep: %v", i, err)
 		}
-	}
-
-	tok, err = l.next()
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-
-	if tok.kind != tokColon {
-		t.Fatalf("expected token tokColon, got %v", tok.kind)
-	}
-
-	tok, err = l.next()
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-
-	if tok.kind != tokNumber || string(tok.val) != "300" {
-		t.Fatalf("expected token tokNumber with val 300, got kind=%v, val=%q", tok.kind, tok.val)
+		if i < 1 && done {
+			t.Fatalf("[%d] unexpected closing bracket", i)
+		}
+		if i == 1 && !done {
+			t.Fatalf("[%d] expected closing bracket", i)
+		}
 	}
 }

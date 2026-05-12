@@ -5,123 +5,91 @@ import (
 	"unsafe"
 )
 
-type tokenKind int8
-
-const (
-	tokString tokenKind = iota
-	tokNumber
-	tokTrue
-	tokFalse
-	tokNull
-	tokLBrace
-	tokRBrace
-	tokLBracket
-	tokRBracket
-	tokColon
-	tokComma
-	tokEOF
-)
-
-type token struct {
-	kind tokenKind
-	val  []byte
-}
-
 type lexer struct {
-	input     []byte
-	pos       int
-	peeked    token
-	hasPeeked bool
+	input []byte
+	pos   int
 }
 
 func newLexer(data []byte) *lexer {
 	return &lexer{input: data}
 }
 
-func (l *lexer) peek() (token, error) {
-	tok, err := l.next()
-	if err != nil {
-		return token{}, err
+func (l *lexer) skipWS() {
+	for l.pos < len(l.input) &&
+		(l.input[l.pos] == ' ' || l.input[l.pos] == '\n' || l.input[l.pos] == '\t' || l.input[l.pos] == '\r') {
+		l.pos++
 	}
-	l.peeked = tok
-	l.hasPeeked = true
-
-	return tok, nil
 }
 
-func (l *lexer) next() (token, error) {
-	if l.hasPeeked {
-		tok := l.peeked
-		l.hasPeeked = false
-		return tok, nil
+func (l *lexer) readKey() ([]byte, error) {
+	l.skipWS()
+
+	if l.pos >= len(l.input) {
+		return nil, fmt.Errorf("readKey: unexpected end of input")
 	}
 
-	for l.pos < len(l.input) && (l.input[l.pos] == ' ' || l.input[l.pos] == '\n' ||
-		l.input[l.pos] == '\t' || l.input[l.pos] == '\r') {
+	if l.input[l.pos] != '"' {
+		return nil, fmt.Errorf("readKey: expected '\"', got %q", l.input[l.pos])
+	}
+
+	l.pos++
+	start := l.pos
+
+	for l.pos < len(l.input) && l.input[l.pos] != '"' {
 		l.pos++
 	}
 
 	if l.pos >= len(l.input) {
-		return token{kind: tokEOF}, nil
+		return nil, fmt.Errorf("readKey: unterminated key")
 	}
 
-	ch := l.input[l.pos]
-
-	switch ch {
-	case '{':
-		l.pos++
-		return token{kind: tokLBrace}, nil
-	case '}':
-		l.pos++
-		return token{kind: tokRBrace}, nil
-	case '[':
-		l.pos++
-		return token{kind: tokLBracket}, nil
-	case ']':
-		l.pos++
-		return token{kind: tokRBracket}, nil
-	case ':':
-		l.pos++
-		return token{kind: tokColon}, nil
-	case ',':
-		l.pos++
-		return token{kind: tokComma}, nil
-	case '"':
-		return l.scanString()
-	case 't':
-		tokLength := len("true")
-		if l.pos+tokLength <= len(l.input) && string(l.input[l.pos:l.pos+tokLength]) == "true" {
-			l.pos += tokLength
-			return token{kind: tokTrue}, nil
-		}
-	case 'f':
-		tokLength := len("false")
-		if l.pos+tokLength <= len(l.input) && string(l.input[l.pos:l.pos+tokLength]) == "false" {
-			l.pos += tokLength
-			return token{kind: tokFalse}, nil
-		}
-	case 'n':
-		tokLength := len("null")
-		if l.pos+tokLength <= len(l.input) && string(l.input[l.pos:l.pos+tokLength]) == "null" {
-			l.pos += tokLength
-			return token{kind: tokNull}, nil
-		}
-	default:
-		if ch == '-' || (ch >= '0' && ch <= '9') {
-			start := l.pos
-			for l.pos < len(l.input) && ((l.input[l.pos] >= '0' && l.input[l.pos] <= '9') ||
-				l.input[l.pos] == '.' || l.input[l.pos] == 'e' || l.input[l.pos] == 'E' ||
-				l.input[l.pos] == '+' || l.input[l.pos] == '-') {
-				l.pos++
-			}
-			return token{kind: tokNumber, val: l.input[start:l.pos]}, nil
-		}
-	}
-
-	return token{}, fmt.Errorf("lexer: unexpected byte %q at pos %v", ch, l.pos)
+	key := l.input[start:l.pos]
+	l.pos++
+	return key, nil
 }
 
-func (l *lexer) scanString() (token, error) {
+func (l *lexer) skipColon() error {
+	l.skipWS()
+	if l.pos >= len(l.input) || l.input[l.pos] != ':' {
+		return fmt.Errorf("skipColon: expected ':'")
+	}
+
+	l.pos++
+
+	return nil
+}
+
+func (l *lexer) skipOpen() error {
+	l.skipWS()
+	if l.pos >= len(l.input) || (l.input[l.pos] != '[' && l.input[l.pos] != '{') {
+		return fmt.Errorf("skipOpen: expected '{' or '['")
+	}
+
+	l.pos++
+
+	return nil
+}
+
+func (l *lexer) readSep(close byte) (bool, error) {
+	l.skipWS()
+
+	if l.pos >= len(l.input) {
+		return false, fmt.Errorf("readSep: unexpected end of input")
+	}
+
+	if l.input[l.pos] == close {
+		l.pos++
+		return true, nil
+	}
+	if l.input[l.pos] == ',' {
+		l.pos++
+		return false, nil
+	}
+
+	return false, fmt.Errorf("readSep: expected ',' or %q, got %q", close, l.input[l.pos])
+}
+
+func (l *lexer) scanString() ([]byte, error) {
 	l.pos++
 	start := l.pos
 	var buf []byte
@@ -137,7 +105,7 @@ func (l *lexer) scanString() (token, error) {
 				val = buf
 			}
 			l.pos++
-			return token{kind: tokString, val: val}, nil
+			return val, nil
 		}
 
 		if ch == '\\' {
@@ -146,7 +114,7 @@ func (l *lexer) scanString() (token, error) {
 			}
 			l.pos++
 			if l.pos >= len(l.input) {
-				return token{}, fmt.Errorf("lexer: unterminated escape")
+				return nil, fmt.Errorf("lexer: unterminated escape")
 			}
 			switch l.input[l.pos] {
 			case '"':
@@ -166,7 +134,7 @@ func (l *lexer) scanString() (token, error) {
 			case 'f':
 				buf = append(buf, '\f')
 			default:
-				return token{}, fmt.Errorf("lexer: unsupported escape sequence %q", l.input[l.pos])
+				return nil, fmt.Errorf("lexer: unsupported escape sequence %q", l.input[l.pos])
 			}
 			l.pos++
 			continue
@@ -178,7 +146,7 @@ func (l *lexer) scanString() (token, error) {
 		l.pos++
 	}
 
-	return token{}, fmt.Errorf("lexer: unterminated string")
+	return nil, fmt.Errorf("lexer: unterminated string")
 }
 
 func (l *lexer) scanRaw() ([]byte, error) {
@@ -237,10 +205,10 @@ func (l *lexer) scanRaw() ([]byte, error) {
 				continue
 			}
 
-			if (l.input[l.pos] == '{' || l.input[l.pos] == '[') && !inString {
+			if l.input[l.pos] == '{' || l.input[l.pos] == '[' {
 				depth++
 			}
-			if (l.input[l.pos] == '}' || l.input[l.pos] == ']') && !inString {
+			if l.input[l.pos] == '}' || l.input[l.pos] == ']' {
 				depth--
 			}
 			l.pos++
@@ -277,26 +245,32 @@ func bytesToString(b []byte) string {
 	return unsafe.String(unsafe.SliceData(b), len(b))
 }
 
-func (l *lexer) expectString() (string, error) {
-	token, err := l.next()
+func (l *lexer) readStringVal() (string, error) {
+	l.skipWS()
+	if l.pos >= len(l.input) || l.input[l.pos] != '"' {
+		return "", fmt.Errorf("readStringVal: expected '\"'")
+	}
+	val, err := l.scanString()
 	if err != nil {
 		return "", err
 	}
-	if token.kind != tokString {
-		return "", fmt.Errorf("expected 'string', got %v", token.kind)
-	}
-
-	return bytesToString(token.val), nil
+	return bytesToString(val), nil
 }
 
-func (l *lexer) expectNumber() ([]byte, error) {
-	token, err := l.next()
-	if err != nil {
-		return nil, err
+func (l *lexer) readNumberBytes() ([]byte, error) {
+	l.skipWS()
+	if l.pos >= len(l.input) {
+		return nil, fmt.Errorf("readNumberBytes: unexpected end of input")
 	}
-	if token.kind != tokNumber {
-		return nil, fmt.Errorf("expected 'number', got %v", token.kind)
+	ch := l.input[l.pos]
+	if ch != '-' && (ch < '0' || ch > '9') {
+		return nil, fmt.Errorf("readNumberBytes: expected number, got %q", ch)
 	}
-
-	return token.val, nil
+	start := l.pos
+	for l.pos < len(l.input) && ((l.input[l.pos] >= '0' && l.input[l.pos] <= '9') ||
+		l.input[l.pos] == '.' || l.input[l.pos] == 'e' || l.input[l.pos] == 'E' ||
+		l.input[l.pos] == '+' || l.input[l.pos] == '-') {
+		l.pos++
+	}
+	return l.input[start:l.pos], nil
 }
