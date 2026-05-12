@@ -2,6 +2,7 @@ package openrtb
 
 import (
 	"fmt"
+	"unsafe"
 )
 
 type tokenKind int8
@@ -120,17 +121,27 @@ func (l *lexer) next() (token, error) {
 
 func (l *lexer) scanString() (token, error) {
 	l.pos++
+	start := l.pos
 	var buf []byte
 
 	for l.pos < len(l.input) {
 		ch := l.input[l.pos]
 
 		if ch == '"' {
+			var val []byte
+			if buf == nil {
+				val = l.input[start:l.pos]
+			} else {
+				val = buf
+			}
 			l.pos++
-			return token{kind: tokString, val: buf}, nil
+			return token{kind: tokString, val: val}, nil
 		}
 
 		if ch == '\\' {
+			if buf == nil {
+				buf = append(buf, l.input[start:l.pos]...)
+			}
 			l.pos++
 			if l.pos >= len(l.input) {
 				return token{}, fmt.Errorf("lexer: unterminated escape")
@@ -159,7 +170,9 @@ func (l *lexer) scanString() (token, error) {
 			continue
 		}
 
-		buf = append(buf, ch)
+		if buf != nil {
+			buf = append(buf, ch)
+		}
 		l.pos++
 	}
 
@@ -258,6 +271,10 @@ func (l *lexer) scanRaw() ([]byte, error) {
 	return l.input[start:l.pos], nil
 }
 
+func bytesToString(b []byte) string {
+	return unsafe.String(unsafe.SliceData(b), len(b))
+}
+
 func (l *lexer) expectString() (string, error) {
 	token, err := l.next()
 	if err != nil {
@@ -267,7 +284,7 @@ func (l *lexer) expectString() (string, error) {
 		return "", fmt.Errorf("expected 'string', got %v", token.kind)
 	}
 
-	return string(token.val), nil
+	return bytesToString(token.val), nil
 }
 
 func (l *lexer) expectNumber() ([]byte, error) {
