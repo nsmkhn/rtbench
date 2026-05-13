@@ -4,6 +4,32 @@ import (
 	"testing"
 )
 
+func TestIndexStopByte(t *testing.T) {
+	tests := []struct {
+		input string
+		want  int
+	}{
+		{`hello"world`, 5},
+		{`hell\oworld`, 4},
+		{`noquotehere`, 11},
+		{`"`, 0},
+		{`\`, 0},
+		{``, 0},
+		// exercises the 16-byte SIMD path
+		{"1234567890123456\"", 16},
+		{"12345678901234567\"", 17},
+		{"1234567890123456\\", 16},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got := indexStopByte([]byte(tt.input))
+			if got != tt.want {
+				t.Fatalf("indexStopByte(%q) = %d, want %d", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestLexer_Helpers(t *testing.T) {
 	input := `{"id":"req-001","at":2,"w":300}`
 	l := newLexer([]byte(input))

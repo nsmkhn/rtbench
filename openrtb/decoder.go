@@ -1,14 +1,18 @@
 package openrtb
 
-import (
-	"strconv"
-)
+import "strconv"
 
 func decodeBidRequest(l *lexer) (*BidRequest, error) {
 	var br BidRequest
-
-	if err := l.skipOpen(); err != nil {
+	if err := decodeBidRequestInto(l, &br); err != nil {
 		return nil, err
+	}
+	return &br, nil
+}
+
+func decodeBidRequestInto(l *lexer, br *BidRequest) error {
+	if err := l.skipOpen(); err != nil {
+		return err
 	}
 
 	for {
@@ -20,106 +24,104 @@ func decodeBidRequest(l *lexer) (*BidRequest, error) {
 
 		key, err := l.readKey()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if err = l.skipColon(); err != nil {
-			return nil, err
+			return err
 		}
 
 		switch string(key) {
 		case "id":
 			br.ID, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "imp":
-			br.Imp, err = decodeImpSlice(l)
+			br.Imp, err = decodeImpSlice(l, nil, nil)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "at":
 			var val []byte
 			val, err = l.readNumberBytes()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			var n int
 			n, err = parseIntBytes(val)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			br.AT = &n
 		case "tmax":
 			var val []byte
 			val, err = l.readNumberBytes()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			var n int
 			n, err = parseIntBytes(val)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			br.TMax = &n
 		case "bcat":
 			br.BCat, err = decodeStringSlice(l)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "badv":
 			br.BAdv, err = decodeStringSlice(l)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "app":
-			br.App, err = decodeApp(l)
-			if err != nil {
-				return nil, err
+			br.App = new(App)
+			if err = decodeApp(l, br.App); err != nil {
+				return err
 			}
 		case "site":
-			br.Site, err = decodeSite(l)
-			if err != nil {
-				return nil, err
+			br.Site = new(Site)
+			if err = decodeSite(l, br.Site); err != nil {
+				return err
 			}
 		case "user":
-			br.User, err = decodeUser(l)
-			if err != nil {
-				return nil, err
+			br.User = new(User)
+			if err = decodeUser(l, br.User); err != nil {
+				return err
 			}
 		case "device":
-			br.Device, err = decodeDevice(l)
-			if err != nil {
-				return nil, err
+			br.Device = new(Device)
+			if err = decodeDevice(l, br.Device); err != nil {
+				return err
 			}
 		case "ext":
 			br.Ext, err = l.scanRaw()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		default:
 			if _, err = l.scanRaw(); err != nil {
-				return nil, err
+				return err
 			}
 		}
 
 		var done bool
 		done, err = l.readSep('}')
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if done {
 			break
 		}
 	}
 
-	return &br, nil
+	return nil
 }
 
-func decodePublisher(l *lexer) (*Publisher, error) {
-	var pub Publisher
-
+func decodePublisher(l *lexer, pub *Publisher) error {
 	if err := l.skipOpen(); err != nil {
-		return nil, err
+		return err
 	}
 
 	for {
@@ -131,57 +133,55 @@ func decodePublisher(l *lexer) (*Publisher, error) {
 
 		key, err := l.readKey()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if err = l.skipColon(); err != nil {
-			return nil, err
+			return err
 		}
 
 		switch string(key) {
 		case "id":
 			pub.ID, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "name":
 			pub.Name, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "domain":
 			pub.Domain, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "ext":
 			pub.Ext, err = l.scanRaw()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		default:
 			if _, err = l.scanRaw(); err != nil {
-				return nil, err
+				return err
 			}
 		}
 
 		var done bool
 		done, err = l.readSep('}')
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if done {
 			break
 		}
 	}
 
-	return &pub, nil
+	return nil
 }
 
-func decodeSite(l *lexer) (*Site, error) {
-	var site Site
-
+func decodeSite(l *lexer, site *Site) error {
 	if err := l.skipOpen(); err != nil {
-		return nil, err
+		return err
 	}
 
 	for {
@@ -193,67 +193,68 @@ func decodeSite(l *lexer) (*Site, error) {
 
 		key, err := l.readKey()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if err = l.skipColon(); err != nil {
-			return nil, err
+			return err
 		}
 
 		switch string(key) {
 		case "id":
 			site.ID, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "name":
 			site.Name, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "domain":
 			site.Domain, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "page":
 			site.Page, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "publisher":
-			site.Publisher, err = decodePublisher(l)
-			if err != nil {
-				return nil, err
+			// If arena pre-allocated a Publisher, reuse it; otherwise allocate.
+			if site.Publisher == nil {
+				site.Publisher = new(Publisher)
+			}
+			if err = decodePublisher(l, site.Publisher); err != nil {
+				return err
 			}
 		case "ext":
 			site.Ext, err = l.scanRaw()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		default:
 			if _, err = l.scanRaw(); err != nil {
-				return nil, err
+				return err
 			}
 		}
 
 		var done bool
 		done, err = l.readSep('}')
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if done {
 			break
 		}
 	}
 
-	return &site, nil
+	return nil
 }
 
-func decodeApp(l *lexer) (*App, error) {
-	var app App
-
+func decodeApp(l *lexer, app *App) error {
 	if err := l.skipOpen(); err != nil {
-		return nil, err
+		return err
 	}
 
 	for {
@@ -265,67 +266,67 @@ func decodeApp(l *lexer) (*App, error) {
 
 		key, err := l.readKey()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if err = l.skipColon(); err != nil {
-			return nil, err
+			return err
 		}
 
 		switch string(key) {
 		case "id":
 			app.ID, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "name":
 			app.Name, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "domain":
 			app.Domain, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "bundle":
 			app.Bundle, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "publisher":
-			app.Publisher, err = decodePublisher(l)
-			if err != nil {
-				return nil, err
+			if app.Publisher == nil {
+				app.Publisher = new(Publisher)
+			}
+			if err = decodePublisher(l, app.Publisher); err != nil {
+				return err
 			}
 		case "ext":
 			app.Ext, err = l.scanRaw()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		default:
 			if _, err = l.scanRaw(); err != nil {
-				return nil, err
+				return err
 			}
 		}
 
 		var done bool
 		done, err = l.readSep('}')
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if done {
 			break
 		}
 	}
 
-	return &app, nil
+	return nil
 }
 
-func decodeDevice(l *lexer) (*Device, error) {
-	var device Device
-
+func decodeDevice(l *lexer, device *Device) error {
 	if err := l.skipOpen(); err != nil {
-		return nil, err
+		return err
 	}
 
 	for {
@@ -337,89 +338,87 @@ func decodeDevice(l *lexer) (*Device, error) {
 
 		key, err := l.readKey()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if err = l.skipColon(); err != nil {
-			return nil, err
+			return err
 		}
 
 		switch string(key) {
 		case "ua":
 			device.UA, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "ip":
 			device.IP, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "devicetype":
 			var val []byte
 			val, err = l.readNumberBytes()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			var n int
 			n, err = parseIntBytes(val)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			device.DeviceType = &n
 		case "make":
 			device.Make, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "model":
 			device.Model, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "os":
 			device.OS, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "osv":
 			device.OSV, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "language":
 			device.Language, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "ext":
 			device.Ext, err = l.scanRaw()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		default:
 			if _, err = l.scanRaw(); err != nil {
-				return nil, err
+				return err
 			}
 		}
 
 		var done bool
 		done, err = l.readSep('}')
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if done {
 			break
 		}
 	}
 
-	return &device, nil
+	return nil
 }
 
-func decodeUser(l *lexer) (*User, error) {
-	var user User
-
+func decodeUser(l *lexer, user *User) error {
 	if err := l.skipOpen(); err != nil {
-		return nil, err
+		return err
 	}
 
 	for {
@@ -431,62 +430,62 @@ func decodeUser(l *lexer) (*User, error) {
 
 		key, err := l.readKey()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if err = l.skipColon(); err != nil {
-			return nil, err
+			return err
 		}
 
 		switch string(key) {
 		case "id":
 			user.ID, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "buyeruid":
 			user.BuyerUID, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "yob":
 			var val []byte
 			val, err = l.readNumberBytes()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			var n int
 			n, err = parseIntBytes(val)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			user.Yob = &n
 		case "gender":
 			user.Gender, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "ext":
 			user.Ext, err = l.scanRaw()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		default:
 			if _, err = l.scanRaw(); err != nil {
-				return nil, err
+				return err
 			}
 		}
 
 		var done bool
 		done, err = l.readSep('}')
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if done {
 			break
 		}
 	}
 
-	return &user, nil
+	return nil
 }
 
 func decodeFormat(l *lexer, format *Format) error {
@@ -549,11 +548,11 @@ func decodeFormat(l *lexer, format *Format) error {
 	return nil
 }
 
-func decodeBanner(l *lexer) (*Banner, error) {
-	var banner Banner
-
+// decodeBanner fills banner from the lexer.
+// formatBuf, if non-nil, is used as the backing array for banner.Format (arena path).
+func decodeBanner(l *lexer, banner *Banner, formatBuf []Format) error {
 	if err := l.skipOpen(); err != nil {
-		return nil, err
+		return err
 	}
 
 	for {
@@ -565,84 +564,86 @@ func decodeBanner(l *lexer) (*Banner, error) {
 
 		key, err := l.readKey()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if err = l.skipColon(); err != nil {
-			return nil, err
+			return err
 		}
 
 		switch string(key) {
 		case "format":
-			banner.Format, err = decodeFormatSlice(l)
+			banner.Format, err = decodeFormatSlice(l, formatBuf)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "w":
 			var val []byte
 			val, err = l.readNumberBytes()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			var n int
 			n, err = parseIntBytes(val)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			banner.W = &n
 		case "h":
 			var val []byte
 			val, err = l.readNumberBytes()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			var n int
 			n, err = parseIntBytes(val)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			banner.H = &n
 		case "mimes":
 			banner.MIMEs, err = decodeStringSlice(l)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "pos":
 			var val []byte
 			val, err = l.readNumberBytes()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			var n int
 			n, err = parseIntBytes(val)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			banner.Pos = &n
 		case "ext":
 			banner.Ext, err = l.scanRaw()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		default:
 			if _, err = l.scanRaw(); err != nil {
-				return nil, err
+				return err
 			}
 		}
 
 		var done bool
 		done, err = l.readSep('}')
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if done {
 			break
 		}
 	}
 
-	return &banner, nil
+	return nil
 }
 
-func decodeImp(l *lexer, imp *Imp) error {
+// decodeImp fills imp from the lexer.
+// formatBuf, if non-nil, is forwarded to decodeBanner (arena path).
+func decodeImp(l *lexer, imp *Imp, formatBuf []Format) error {
 	if err := l.skipOpen(); err != nil {
 		return err
 	}
@@ -669,18 +670,20 @@ func decodeImp(l *lexer, imp *Imp) error {
 				return err
 			}
 		case "banner":
-			imp.Banner, err = decodeBanner(l)
-			if err != nil {
+			if imp.Banner == nil {
+				imp.Banner = new(Banner)
+			}
+			if err = decodeBanner(l, imp.Banner, formatBuf); err != nil {
 				return err
 			}
 		case "video":
-			imp.Video, err = decodeVideo(l)
-			if err != nil {
+			imp.Video = new(Video)
+			if err = decodeVideo(l, imp.Video); err != nil {
 				return err
 			}
 		case "native":
-			imp.Native, err = decodeNative(l)
-			if err != nil {
+			imp.Native = new(Native)
+			if err = decodeNative(l, imp.Native); err != nil {
 				return err
 			}
 		case "bidfloor":
@@ -736,11 +739,9 @@ func decodeImp(l *lexer, imp *Imp) error {
 	return nil
 }
 
-func decodeNative(l *lexer) (*Native, error) {
-	var native Native
-
+func decodeNative(l *lexer, native *Native) error {
 	if err := l.skipOpen(); err != nil {
-		return nil, err
+		return err
 	}
 
 	for {
@@ -752,54 +753,52 @@ func decodeNative(l *lexer) (*Native, error) {
 
 		key, err := l.readKey()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if err = l.skipColon(); err != nil {
-			return nil, err
+			return err
 		}
 
 		switch string(key) {
 		case "request":
 			native.Request, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "ver":
 			var s string
 			s, err = l.readStringVal()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			native.Ver = &s
 		case "ext":
 			native.Ext, err = l.scanRaw()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		default:
 			if _, err = l.scanRaw(); err != nil {
-				return nil, err
+				return err
 			}
 		}
 
 		var done bool
 		done, err = l.readSep('}')
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if done {
 			break
 		}
 	}
 
-	return &native, nil
+	return nil
 }
 
-func decodeVideo(l *lexer) (*Video, error) {
-	var video Video
-
+func decodeVideo(l *lexer, video *Video) error {
 	if err := l.skipOpen(); err != nil {
-		return nil, err
+		return err
 	}
 
 	for {
@@ -811,122 +810,122 @@ func decodeVideo(l *lexer) (*Video, error) {
 
 		key, err := l.readKey()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if err = l.skipColon(); err != nil {
-			return nil, err
+			return err
 		}
 
 		switch string(key) {
 		case "mimes":
 			video.MIMEs, err = decodeStringSlice(l)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "minduration":
 			var val []byte
 			val, err = l.readNumberBytes()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			var n int
 			n, err = parseIntBytes(val)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			video.MinDuration = &n
 		case "maxduration":
 			var val []byte
 			val, err = l.readNumberBytes()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			var n int
 			n, err = parseIntBytes(val)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			video.MaxDuration = &n
 		case "protocols":
 			video.Protocols, err = decodeIntSlice(l)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "w":
 			var val []byte
 			val, err = l.readNumberBytes()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			var n int
 			n, err = parseIntBytes(val)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			video.W = &n
 		case "h":
 			var val []byte
 			val, err = l.readNumberBytes()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			var n int
 			n, err = parseIntBytes(val)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			video.H = &n
 		case "linearity":
 			var val []byte
 			val, err = l.readNumberBytes()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			var n int
 			n, err = parseIntBytes(val)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			video.Linearity = &n
 		case "skip":
 			var val []byte
 			val, err = l.readNumberBytes()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			var n int
 			n, err = parseIntBytes(val)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			video.Skip = &n
 		case "playbackmethod":
 			video.PlaybackMethod, err = decodeIntSlice(l)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		case "ext":
 			video.Ext, err = l.scanRaw()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		default:
 			if _, err = l.scanRaw(); err != nil {
-				return nil, err
+				return err
 			}
 		}
 
 		var done bool
 		done, err = l.readSep('}')
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if done {
 			break
 		}
 	}
 
-	return &video, nil
+	return nil
 }
 
 func decodeStringSlice(l *lexer) ([]string, error) {
@@ -991,8 +990,10 @@ func decodeIntSlice(l *lexer) ([]int, error) {
 	}
 }
 
-func decodeFormatSlice(l *lexer) ([]Format, error) {
-	var slice []Format
+// decodeFormatSlice decodes a JSON array of Format objects.
+// buf, if non-nil, is used as the initial backing array (arena path).
+func decodeFormatSlice(l *lexer, buf []Format) ([]Format, error) {
+	slice := buf
 	if err := l.skipOpen(); err != nil {
 		return nil, err
 	}
@@ -1019,8 +1020,11 @@ func decodeFormatSlice(l *lexer) ([]Format, error) {
 	}
 }
 
-func decodeImpSlice(l *lexer) ([]Imp, error) {
-	var slice []Imp
+// decodeImpSlice decodes a JSON array of Imp objects.
+// buf, if non-nil, is used as the initial backing array (arena path).
+// formatBuf, if non-nil, is forwarded to each decodeImp call (arena path).
+func decodeImpSlice(l *lexer, buf []Imp, formatBuf []Format) ([]Imp, error) {
+	slice := buf
 	if err := l.skipOpen(); err != nil {
 		return nil, err
 	}
@@ -1033,7 +1037,7 @@ func decodeImpSlice(l *lexer) ([]Imp, error) {
 		}
 
 		slice = append(slice, Imp{})
-		if err := decodeImp(l, &slice[len(slice)-1]); err != nil {
+		if err := decodeImp(l, &slice[len(slice)-1], formatBuf); err != nil {
 			return nil, err
 		}
 

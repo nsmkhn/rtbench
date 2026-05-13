@@ -144,3 +144,37 @@ func BenchmarkParse_HandWrittenParallel(b *testing.B) {
 		}
 	})
 }
+
+func BenchmarkParse_HandWrittenArena(b *testing.B) {
+	data, err := os.ReadFile("../testdata/valid_banner.json")
+	if err != nil {
+		b.Fatalf("could not read testdata: %v", err)
+	}
+
+	b.ResetTimer()
+	for b.Loop() {
+		br, err := ParseFastArena(data)
+		if err != nil {
+			b.Fatal(err)
+		}
+		ReleaseArena(br)
+	}
+}
+
+func BenchmarkParse_HandWrittenArenaParallel(b *testing.B) {
+	data, err := os.ReadFile("../testdata/valid_banner.json")
+	if err != nil {
+		b.Fatalf("could not read testdata: %v", err)
+	}
+
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			br, err := ParseFastArena(data)
+			if err != nil {
+				b.Fatal(err)
+			}
+			ReleaseArena(br)
+		}
+	})
+}

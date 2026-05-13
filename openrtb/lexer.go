@@ -90,63 +90,64 @@ func (l *lexer) readSep(close byte) (bool, error) {
 }
 
 func (l *lexer) scanString() ([]byte, error) {
-	l.pos++
+	l.pos++ // skip opening '"'
 	start := l.pos
 	var buf []byte
 
-	for l.pos < len(l.input) {
-		ch := l.input[l.pos]
+	for {
+		remaining := l.input[l.pos:]
+		n := indexStopByte(remaining)
+
+		if n == len(remaining) {
+			return nil, fmt.Errorf("lexer: unterminated string")
+		}
+
+		ch := l.input[l.pos+n]
 
 		if ch == '"' {
-			var val []byte
 			if buf == nil {
-				val = l.input[start:l.pos]
-			} else {
-				val = buf
+				val := l.input[start : l.pos+n]
+				l.pos += n + 1
+				return val, nil
 			}
-			l.pos++
-			return val, nil
+			buf = append(buf, remaining[:n]...)
+			l.pos += n + 1
+			return buf, nil
 		}
 
-		if ch == '\\' {
-			if buf == nil {
-				buf = append(buf, l.input[start:l.pos]...)
-			}
-			l.pos++
-			if l.pos >= len(l.input) {
-				return nil, fmt.Errorf("lexer: unterminated escape")
-			}
-			switch l.input[l.pos] {
-			case '"':
-				buf = append(buf, '"')
-			case '\\':
-				buf = append(buf, '\\')
-			case '/':
-				buf = append(buf, '/')
-			case 'n':
-				buf = append(buf, '\n')
-			case 'r':
-				buf = append(buf, '\r')
-			case 't':
-				buf = append(buf, '\t')
-			case 'b':
-				buf = append(buf, '\b')
-			case 'f':
-				buf = append(buf, '\f')
-			default:
-				return nil, fmt.Errorf("lexer: unsupported escape sequence %q", l.input[l.pos])
-			}
-			l.pos++
-			continue
+		// ch == '\\'
+		if buf == nil {
+			buf = append(buf, l.input[start:l.pos+n]...)
+		} else {
+			buf = append(buf, remaining[:n]...)
 		}
+		l.pos += n + 1
 
-		if buf != nil {
-			buf = append(buf, ch)
+		if l.pos >= len(l.input) {
+			return nil, fmt.Errorf("lexer: unterminated escape")
+		}
+		switch l.input[l.pos] {
+		case '"':
+			buf = append(buf, '"')
+		case '\\':
+			buf = append(buf, '\\')
+		case '/':
+			buf = append(buf, '/')
+		case 'n':
+			buf = append(buf, '\n')
+		case 'r':
+			buf = append(buf, '\r')
+		case 't':
+			buf = append(buf, '\t')
+		case 'b':
+			buf = append(buf, '\b')
+		case 'f':
+			buf = append(buf, '\f')
+		default:
+			return nil, fmt.Errorf("lexer: unsupported escape sequence %q", l.input[l.pos])
 		}
 		l.pos++
 	}
-
-	return nil, fmt.Errorf("lexer: unterminated string")
 }
 
 func (l *lexer) scanRaw() ([]byte, error) {
