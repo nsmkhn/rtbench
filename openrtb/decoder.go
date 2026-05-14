@@ -990,8 +990,6 @@ func decodeIntSlice(l *lexer) ([]int, error) {
 	}
 }
 
-// decodeFormatSlice decodes a JSON array of Format objects.
-// buf, if non-nil, is used as the initial backing array (arena path).
 func decodeFormatSlice(l *lexer, buf []Format) ([]Format, error) {
 	slice := buf
 	if err := l.skipOpen(); err != nil {
@@ -1020,9 +1018,6 @@ func decodeFormatSlice(l *lexer, buf []Format) ([]Format, error) {
 	}
 }
 
-// decodeImpSlice decodes a JSON array of Imp objects.
-// buf, if non-nil, is used as the initial backing array (arena path).
-// formatBuf, if non-nil, is forwarded to each decodeImp call (arena path).
 func decodeImpSlice(l *lexer, buf []Imp, formatBuf []Format) ([]Imp, error) {
 	slice := buf
 	if err := l.skipOpen(); err != nil {
